@@ -34,6 +34,8 @@ cd poe-alteration-assistant
 
 ## Usage
 
+Video demo can be found at: https://youtu.be/WtSM1Micxlc?si=9efSIHJaNv3YiaWe
+
 1. Run the script
 
 ```bash
