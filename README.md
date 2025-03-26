@@ -1,4 +1,4 @@
-# PoE Alteration Rolling Assistant
+# Awakened Alteration Spam
 
 A lightweight Python automation script for efficiently rolling items with alteration orbs in **Path of Exile**. It reads item text from the clipboard, checks if it matches a user-defined regex pattern, and clicks to reroll if it doesn't. The script stops automatically when a match is found or a safety limit is reached.
 
