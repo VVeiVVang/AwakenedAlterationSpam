@@ -36,16 +36,17 @@ Community reports also indicate server-side detection of abnormally frequent or 
 
 ## About
 
-A lightweight Python script that rolls an item with alteration orbs until a user-defined regex matches anywhere in the item tooltip. When a match is found the script stops and stays ready — press `=` again to start a new session without restarting the script.
+A lightweight Python script that rolls an item with alteration and augmentation orbs until a user-defined regex matches anywhere in the item tooltip. When a match is found the script stops and stays ready — press `=` again to start a new session without restarting the script.
 
 ## Features
 
 - Reads item tooltip via `Ctrl+C`
 - Matches a regex against the full item text
-- Holds `Shift` automatically so you stay in alt-spam mode
+- Automatically uses an Augmentation Orb when an affix slot is open (optional, on by default)
+- Holds `Shift` automatically so you stay in orb-spam mode
 - Stops on match and waits for the next session — no need to restart
 - Stop mid-roll at any time with `-`
-- Safety limit prevents runaway rolling
+- Per-session orb cap counts every orb used (alt + aug combined)
 
 ## Requirements
 
@@ -76,12 +77,18 @@ cd AwakenedAlterationSpam
 python AwakenedAlterationSpam.py
 ```
 
-2. At startup you will be prompted for two things:
+2. At startup you will be prompted for three things:
 
-A safety limit — the maximum number of roll attempts before the script auto-stops:
+Whether to allow Augmentation Orbs (default yes):
 
 ```
-Enter safety limit [40] (max attempts before auto-stop): 100
+Allow Augmentation Orb? [Y/n]:
+```
+
+A per-session orb cap — the script auto-stops after this many orbs are used in total (alt + aug combined):
+
+```
+Enter max orbs per session [40]: 100
 ```
 
 A regex pattern to match against the item tooltip (same syntax as your loot filter):
@@ -92,7 +99,7 @@ Enter regex to match: Merciless|Dictator
 
 3. In-game setup
 
-- Right-click the Alteration Orb to enter alt-spam mode (the cursor changes)
+- Right-click the Alteration Orb to enter orb-spam mode (the cursor changes)
 - Hover over the item you want to roll
 - Press `=` — the script takes over from here
 
@@ -100,8 +107,9 @@ The script will:
 
 - Hold `Shift` automatically (you do not need to hold it yourself)
 - Copy the item tooltip with `Ctrl+C`
-- Match the full tooltip text against your regex
-- Left-click to reroll if no match is found
+- Match the full tooltip text against your regex — stop if found
+- If aug is enabled and the item has an open affix slot, use an Augmentation Orb first (press `Alt` + click), then use an Alteration Orb to reroll
+- If both affix slots are already filled, use an Alteration Orb directly
 - Stop and release `Shift` when a match is found, then print `Press = to start again`
 
 4. Controls
@@ -120,4 +128,5 @@ The script stays running. You do not need to tab back to the terminal and restar
 
 - Requires PoE to be running in windowed or borderless windowed mode.
 - The regex matches against the full item tooltip text, not just the item name. This means mods, flavour text, and implicit lines are all included in the match.
-- Consider using a PowerShell window set to "Always on Top" to monitor the attempt log without alt-tabbing.
+- Consider using a PowerShell window set to "Always on Top" to monitor the orb log without alt-tabbing.
+- Affix slot detection reads the item name line: a prefix is detected by a word ending in `'s` (e.g. `Squire's`) and a suffix by `of` surrounded by spaces (e.g. `of Thirst`). If both are present, the aug step is skipped for that roll.

@@ -3,12 +3,11 @@ import pyautogui
 import pyperclip
 import time
 import re
-import sys
 
-safety_limit = 40  # Max number of roll attempts before exiting
-
+orb_cap = 40
 running = False
 user_regex = ""
+allow_aug = True
 
 def extract_item_name(text):
     lines = text.splitlines()
@@ -26,19 +25,24 @@ def extract_item_name(text):
 
     return "\n".join(extracted)
 
+def has_both_affixes(item_name):
+    has_prefix = bool(re.search(r"'s\b", item_name))
+    has_suffix = bool(re.search(r"\bof\s", item_name))
+    return has_prefix and has_suffix
+
 def start():
-    global running, user_regex
+    global running, user_regex, allow_aug, orb_cap
     if not running:
         running = True
         print("Program started.")
 
-        attempts = 0
-        attempt_width = len(str(safety_limit))  # Align width based on safety_limit
+        orbs_used = 0
+        width = len(str(orb_cap))
 
-        pyautogui.keyDown('shift')  # Hold shift at the start
+        pyautogui.keyDown('shift')
 
         try:
-            while attempts < safety_limit and running:
+            while orbs_used < orb_cap and running:
                 pyautogui.hotkey('ctrl', 'c')
                 time.sleep(0.05)
                 raw_text = pyperclip.paste()
@@ -47,20 +51,25 @@ def start():
                 item_name = "".join(line.lstrip() for line in item_name.splitlines())
 
                 if re.search(user_regex, raw_text, re.IGNORECASE):
-                    print("Match found. Exiting.")
-                    print("Press = to start again.")
-                    break  # exits loop to release shift
+                    print(f"Match found after {orbs_used} orbs. Press = to start again.")
+                    break
 
-                print(f"Attempt {str(attempts + 1).rjust(attempt_width)}: Regex: {user_regex} Item Name: {item_name}")
+                if allow_aug and not has_both_affixes(item_name):
+                    pyautogui.keyDown('alt')
+                    pyautogui.click()
+                    pyautogui.keyUp('alt')
+                    orbs_used += 1
+
+                print(f"Orbs used {str(orbs_used + 1).rjust(width)}: {user_regex} | {item_name}")
                 pyautogui.click()
-                attempts += 1
+                orbs_used += 1
                 time.sleep(0.05)
 
-            if attempts >= safety_limit:
-                print(f"Reached safety limit of {safety_limit} attempts. Exiting.")
+            if orbs_used >= orb_cap:
+                print(f"Reached session orb cap of {orb_cap}. Press = to start again.")
 
         finally:
-            pyautogui.keyUp('shift')  # Always release shift, even if an error occurs
+            pyautogui.keyUp('shift')
             running = False
 
 def stop():
@@ -69,15 +78,20 @@ def stop():
         running = False
         print("Program stopped.")
 
-# Ask user for safety limit (default to 40 if invalid)
-try:
-    user_input = input("Enter safety limit [40] (max attempts before auto-stop): ").strip()
-    safety_limit = int(user_input) if user_input else 40
-except ValueError:
-    safety_limit = 40
-print(f"Using safety limit: {safety_limit}")
+# Allow augmentation orb
+aug_input = input("Allow Augmentation Orb? [Y/n]: ").strip().lower()
+allow_aug = aug_input != 'n'
+print(f"Augmentation Orb: {'enabled' if allow_aug else 'disabled'}")
 
-# Ask user for regex
+# Session orb cap
+try:
+    user_input = input("Enter max orbs per session [40]: ").strip()
+    orb_cap = int(user_input) if user_input else 40
+except ValueError:
+    orb_cap = 40
+print(f"Orb cap: {orb_cap}")
+
+# Regex
 user_regex = input("Enter regex to match: ")
 
 keyboard.add_hotkey('=', start)
