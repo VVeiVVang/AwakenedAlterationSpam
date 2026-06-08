@@ -35,29 +35,33 @@ def start():
         attempts = 0
         attempt_width = len(str(safety_limit))  # Align width based on safety_limit
 
-        while attempts < safety_limit:
-            pyautogui.hotkey('ctrl', 'c')
-            time.sleep(0.05)
-            raw_text = pyperclip.paste()
+        pyautogui.keyDown('shift')  # Hold shift at the start
 
-            # Extract and clean item name
-            item_name = extract_item_name(raw_text)
-            item_name = "".join(line.lstrip() for line in item_name.splitlines())
+        try:
+            while attempts < safety_limit and running:
+                pyautogui.hotkey('ctrl', 'c')
+                time.sleep(0.05)
+                raw_text = pyperclip.paste()
 
-            # Check for regex match
-            if re.search(user_regex, item_name):
-                print("Match found. Exiting.")
-                keyboard.unhook_all_hotkeys()
-                sys.exit(0)
+                item_name = extract_item_name(raw_text)
+                item_name = "".join(line.lstrip() for line in item_name.splitlines())
 
-            # Print formatted attempt log
-            print(f"Attempt {str(attempts + 1).rjust(attempt_width)}: Regex: {user_regex} Item Name: {item_name}")
-            pyautogui.click()
-            attempts += 1
-            time.sleep(0.1)
+                if re.search(user_regex, raw_text, re.IGNORECASE):
+                    print("Match found. Exiting.")
+                    print("Press = to start again.")
+                    break  # exits loop to release shift
 
-        print(f"Reached safety limit of {safety_limit} attempts. Exiting.")
-        running = False
+                print(f"Attempt {str(attempts + 1).rjust(attempt_width)}: Regex: {user_regex} Item Name: {item_name}")
+                pyautogui.click()
+                attempts += 1
+                time.sleep(0.05)
+
+            if attempts >= safety_limit:
+                print(f"Reached safety limit of {safety_limit} attempts. Exiting.")
+
+        finally:
+            pyautogui.keyUp('shift')  # Always release shift, even if an error occurs
+            running = False
 
 def stop():
     global running
@@ -68,18 +72,18 @@ def stop():
 # Ask user for safety limit (default to 40 if invalid)
 try:
     user_input = input("Enter safety limit [40] (max attempts before auto-stop): ").strip()
-    SAFETY_LIMIT = int(user_input) if user_input else 40
+    safety_limit = int(user_input) if user_input else 40
 except ValueError:
-    SAFETY_LIMIT = 40
-print(f"Using safety limit: {SAFETY_LIMIT}")
+    safety_limit = 40
+print(f"Using safety limit: {safety_limit}")
 
 # Ask user for regex
-user_regex = input("Enter regex to match item name: ")
+user_regex = input("Enter regex to match: ")
 
-keyboard.add_hotkey('shift+=', start)
-keyboard.add_hotkey('shift+-', stop)
+keyboard.add_hotkey('=', start)
+keyboard.add_hotkey('-', stop)
 
-print("Waiting for Shift+= to start, Shift+- to stop.")
+print("Waiting for = to start, - to stop.")
 print("Press Ctrl+C to exit manually if needed.")
 
 try:
