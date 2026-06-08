@@ -47,6 +47,7 @@ A lightweight Python script that rolls an item with alteration and augmentation 
 - Stops on match and waits for the next session — no need to restart
 - Stop mid-roll at any time with `-`
 - Per-session orb cap counts every orb used (alt + aug combined)
+- Type `?` at any startup prompt for inline help
 
 ## Requirements
 
@@ -77,13 +78,21 @@ cd AwakenedAlterationSpam
 python AwakenedAlterationSpam.py
 ```
 
-2. At startup you will be prompted for three things:
+2. At startup you will be prompted for a few things. Type `?` at any prompt to see inline help for that question.
 
 Whether to allow Augmentation Orbs (default yes):
 
 ```
 Allow Augmentation Orb? [Y/n]:
 ```
+
+The item base name — **only asked when Augmentation Orbs are enabled.** This is the base item with no affixes; everything before it is treated as the prefix and everything after as the suffix, which is how the script detects an open affix slot:
+
+```
+Enter item base name: Kinetic Wand
+```
+
+> For example, if the item reads `Humming Kinetic Wand of Waning`, the base is `Kinetic Wand` (`Humming` is the prefix, `of Waning` is the suffix).
 
 A per-session orb cap — the script auto-stops after this many orbs are used in total (alt + aug combined):
 
@@ -108,8 +117,7 @@ The script will:
 - Hold `Shift` automatically (you do not need to hold it yourself)
 - Copy the item tooltip with `Ctrl+C`
 - Match the full tooltip text against your regex — stop if found
-- If aug is enabled and the item has an open affix slot, use an Augmentation Orb first (press `Alt` + click), then use an Alteration Orb to reroll
-- If both affix slots are already filled, use an Alteration Orb directly
+- Use one orb per cycle: an Augmentation Orb (hold `Alt` + click) if aug is enabled and an affix slot is open, otherwise an Alteration Orb to reroll. After an aug fills a slot, the next cycle naturally rolls an Alteration Orb.
 - Stop and release `Shift` when a match is found, then print `Press = to start again`
 
 4. Controls
@@ -129,4 +137,5 @@ The script stays running. You do not need to tab back to the terminal and restar
 - Requires PoE to be running in windowed or borderless windowed mode.
 - The regex matches against the full item tooltip text, not just the item name. This means mods, flavour text, and implicit lines are all included in the match.
 - Consider using a PowerShell window set to "Always on Top" to monitor the orb log without alt-tabbing.
-- Affix slot detection reads the item name line: a prefix is detected by a word ending in `'s` (e.g. `Squire's`) and a suffix by `of` surrounded by spaces (e.g. `of Thirst`). If both are present, the aug step is skipped for that roll.
+- Affix slot detection works by splitting the item name on the base name you provide: any text before the base is the prefix, any text after is the suffix. If both are present the item is full, so an Alteration Orb is used; otherwise an Augmentation Orb fills the open slot. This is why the base name must be accurate (it is matched case-insensitively). If the base cannot be found in the name, the script falls back to Alteration Orbs only.
+- Regex is evaluated with Python's `re` module against the full tooltip, so any Python regex syntax works. The `?` help on the regex prompt covers matching multi-word mods and combining them with `|`.
